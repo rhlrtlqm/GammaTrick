@@ -1,0 +1,44 @@
+body
+{
+    text-align: center;
+    background-color: lightgray;
+}
+
+#filearea
+{
+    display: inline-block;
+    width: 87vw;
+    min-height: 90vh;
+    margin: 0 3vw;
+    box-sizing: border-box;
+    border: 10px solid turquoise;
+    background-color: mintcream;
+}
+
+#dropzone
+{
+    min-height: 75vh;
+    box-sizing: border-box;
+    border: 20px solid mediumspringgreen;
+    background-color: white;
+}
+
+#previewarea
+{
+    display: inline-block;
+    max-width: 90%;
+    border: 6px solid black;
+    background-color: gray;
+    color: white;
+}
+
+#preview
+{
+    margin: 8px;
+    border: 3px solid black;
+    background-image: url('trans.png');
+    background-repeat: repeat;
+    color: black;
+    font-weight: bold;
+    text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+}
