@@ -11,6 +11,7 @@ function updateImgBlob(blob)
 
 $(function() {
     updateImgBlob(img_blob);
+    startConvert(img_blob);
 
     $('#fileform')[0].reset()
 });
