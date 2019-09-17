@@ -4,7 +4,7 @@ function updateImgBlob(blob)
 
     var reader = new FileReader();
     reader.onload = function(e) {
-        $('#preview').attr('src', reader.result);
+        //$('#preview').attr('src', reader.result);
     }
     reader.readAsDataURL(img_blob);
 }

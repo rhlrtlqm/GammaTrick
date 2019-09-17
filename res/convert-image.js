@@ -34,15 +34,27 @@ function gamma_palette(original_darkest, converted_darkest)
 
 var gam_palette = gamma_palette(0xfa, 0x40);
 
+var converters = {
+    floydSteinberg: function(img, ctx)
+    {
+        ctx.putImageData(img, 0, 0);
+    }
+};
+
 function convertBitmap(name, image)
 {
-    console.log(gam_palette);
-    console.log(image);
+    var cvs = $('<canvas/>').appendTo('#result')[0];
+    cvs.width = image.width;
+    cvs.height = image.height;
+    var ctx = cvs.getContext('2d');
+
+
+    converters[name](image, ctx);
 }
 
 function startConvert(img_blob)
 {
-    var cvs = new Canvas();
+    var cvs = $('<canvas/>')[0];
     var ctx = cvs.getContext('2d');
     var img = new Image();
 
@@ -55,5 +67,5 @@ function startConvert(img_blob)
         convertBitmap('floydSteinberg', imgData);
     };
 
-    img.src = URL.createObjectURL(blob);
+    img.src = URL.createObjectURL(img_blob);
 }
