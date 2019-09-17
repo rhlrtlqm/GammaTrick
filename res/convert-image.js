@@ -31,12 +31,122 @@ function gamma_palette(original_darkest, converted_darkest)
     };
 }
 
-
 var gam_palette = gamma_palette(0xfa, 0x40);
+
+function cAdd(a, b, k)
+{
+    a[0] += k*b[0],
+    a[1] += k*b[1],
+    a[2] += k*b[2]
+
+    return a;
+}
+
+function cDiff(a, b)
+{
+    return cAdd(a, b, -1);
+}
+
+function colorError(a, b)
+{
+    d = cDiff(a.slice(), b);
+
+    return d[0]*d[0] + 
+        d[1]*d[1] + 
+        d[2]*d[2];
+}
+
+function nearestPaletteColor(c)
+{
+    var bestError = Infinity;
+    var cs = gam_palette.colors;
+    var bestColor = cs[0];
+
+    for(var i in cs)
+    {
+        var error = colorError(cs[i], c);
+        if(error < bestError)
+        {
+            bestError = error;
+            bestColor = cs[i];
+        }
+    }
+
+    return bestColor;
+}
+
+
+
+function colorFromImageData(img, x, y)
+{
+    var pixelIndex = img.width*y + x;
+    return img.data.slice(4*pixelIndex, 4*pixelIndex+3);
+}
+
+function colorToImageData(img, x, y, c)
+{
+    var idx = 4*(img.width*y + x);
+    img.data[idx] = c[0];
+    img.data[idx+1] = c[1];
+    img.data[idx+2] = c[2];
+}
+
+
+function fillCircularBuffer(img, row)
+{
+    var buf = [];
+    var c = 0;
+    for(; c < img.width; c++)
+    {
+        buf[c] = colorFromImageData(img, c, row);
+    }
+    buf[-1] = buf[c] = [0, 0, 0];
+    return buf;
+}
+
 
 var converters = {
     floydSteinberg: function(img, ctx)
     {
+        var w = img.width;
+        var h = img.height;
+
+        var buf_cur;
+        var buf_next;
+
+        buf_next = fillCircularBuffer(img, 0);
+
+        for(var r = 0; r < h-1; r++)
+        {
+            buf_cur = buf_next;
+            buf_next = fillCircularBuffer(img, r+1);
+
+            for(var c = 0; c < w; c++)
+            {
+                var c_old = buf_cur[c];
+                var c_new = nearestPaletteColor(c_old);
+                var diff = cDiff(c_old, c_new);
+
+                colorToImageData(img, c, r, c_new);
+                cAdd(buf_cur[c+1], diff, 7/16);
+                cAdd(buf_next[c-1], diff, 3/16);
+                cAdd(buf_next[c], diff, 5/16);
+                cAdd(buf_next[c+1], diff, 1/16);
+            }
+        }
+
+        buf_cur = buf_next;
+        for(var c = 0; c < w; c++)
+        {
+            var c_old = buf_cur[c];
+            var c_new = nearestPaletteColor(c_old);
+            var diff = cDiff(c_old, c_new);
+
+            colorToImageData(img, c, r, c_new);
+            buf_cur[c] = c_new;
+            cAdd(buf_cur[c+1], diff, 1);
+        }
+
         ctx.putImageData(img, 0, 0);
     }
 };
