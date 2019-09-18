@@ -25,6 +25,16 @@ function fillCircularBuffer(img, row)
     return buf;
 }
 
+function paletteColorWithDelta(color, randNum)
+{
+    var colorNumPerChannel = Math.cbrt(gam_palette.colors.length);
+    var avgDist = 256/colorNumPerChannel;
+
+    var movedColor = cAdd(color, [avgDist, avgDist, avgDist], randNum-0.5);
+    return nearestPaletteColor(movedColor);
+}
+
+
 
 var converters = {
     floydSteinberg: function(img, ctx)
@@ -69,7 +79,25 @@ var converters = {
         }
 
         ctx.putImageData(img, 0, 0);
+    },
+    unorderedDither: function(img, ctx)
+    {
+        var w = img.width;
+        var h = img.height;
+        for(var row = 0; row < h; row++)
+        {
+            for(var col = 0; col < w; col++)
+            {
+                var c_old = colorFromImageData(img, col, row);
+                var delta = Math.random();
+
+                var c_new = paletteColorWithDelta(c_old, delta);
+                colorToImageData(img, col, row, c_new);
+            }
+        }
+        ctx.putImageData(img, 0, 0);
     }
+
 };
 
 
