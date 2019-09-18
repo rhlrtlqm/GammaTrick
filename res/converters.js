@@ -34,6 +34,12 @@ function paletteColorWithDelta(color, randNum)
     return nearestPaletteColor(movedColor);
 }
 
+bayerMatrix = (function() {
+    return [[0, 8/16, 2/16, 10/16],
+            [12/16, 4/16, 14/16, 6/16],
+            [3/16, 11/16, 1/16, 9/16],
+            [15/16, 7/16, 13/16, 5/16]];
+}());
 
 
 var converters = {
@@ -96,8 +102,23 @@ var converters = {
             }
         }
         ctx.putImageData(img, 0, 0);
+    },
+    orderedDither: function(img, ctx)
+    {
+        var N = bayerMatrix.length;
+        var w = img.width;
+        var h = img.height;
+        for(var row = 0; row < h; row++)
+        {
+            for(var col = 0; col < w; col++)
+            {
+                var c_old = colorFromImageData(img, col, row);
+                var delta = bayerMatrix[row%N][col%N];
+
+                var c_new = paletteColorWithDelta(c_old, delta);
+                colorToImageData(img, col, row, c_new);
+            }
+        }
+        ctx.putImageData(img, 0, 0);
     }
-
 };
-
-
