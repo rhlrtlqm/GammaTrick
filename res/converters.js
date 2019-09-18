@@ -28,9 +28,18 @@ function fillCircularBuffer(img, row)
 function paletteColorWithDelta(color, randNum)
 {
     var colorNumPerChannel = Math.cbrt(gam_palette.colors.length);
-    var avgDist = 256/colorNumPerChannel;
+    var gamma = gam_palette.gamma;
+    var distVec = [];
+    for(var i = 0; i < 3; i++)
+    {
+        var lower = Math.floor(reverseGamma(color[i], gamma));
+        var upper = lower+1;
+        var dist = reverseGamma(upper, 1/gamma) - reverseGamma(lower, 1/gamma);
+        distVec.push(dist/2);
+    }
 
-    var movedColor = cAdd(color, [avgDist, avgDist, avgDist], randNum-0.5);
+
+    var movedColor = cAdd(color, distVec, randNum-0.5);
     return nearestPaletteColor(movedColor);
 }
 
