@@ -88,22 +88,34 @@ var floydMatrix = [[0, 0, 7/16],
                    [3/16, 5/16, 1/16]];
 var pushNextMatrix = [[0, 0, 1]];
 
-var converters = {
-    floydSteinberg: function(img, ctx, isSerpentine)
-    {
+function errorDiffuser()
+{
+    var matrices = arguments;
+    return function(img, ctx, isSerpentine) {
         var w = img.width;
         var h = img.height;
         var img_buf = copyImageData(img, ctx);
 
-        for(var r = 0; r < h-1; r++)
+        var matIdx = 0;
+        var matrix = matrices[matIdx];
+        for(var r = 0; r < h; r++)
         {
-            quantitizeLine(img_buf, r, floydMatrix, isSerpentine);
+            while(r+(matrix.length)-1 >= h)
+            {
+                matIdx++;
+                matrix = matrices[matIdx];
+            }
+
+            quantitizeLine(img_buf, r, matrix, isSerpentine);
         }
 
-        quantitizeLine(img_buf, r, pushNextMatrix, isSerpentine);
-
         ctx.putImageData(img_buf, 0, 0);
-    },
+    }
+}
+
+
+var converters = {
+    floydSteinberg: errorDiffuser(floydMatrix, pushNextMatrix),
     unorderedDither: function(img, ctx)
     {
         var w = img.width;
