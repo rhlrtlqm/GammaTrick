@@ -12,6 +12,12 @@ function colorToImageData(img, x, y, c)
     img.data[idx+2] = c[2];
 }
 
+function copyImageData(img, ctx)
+{
+    var img_buf = ctx.createImageData(img);
+    img_buf.data.set(img.data);
+    return img_buf;
+}
 
 function fillCircularBuffer(img, row)
 {
@@ -56,6 +62,7 @@ var converters = {
     {
         var w = img.width;
         var h = img.height;
+        var img_buf = copyImageData(img, ctx);
 
         var buf_cur;
         var buf_next;
@@ -73,7 +80,7 @@ var converters = {
                 var c_new = nearestPaletteColor(c_old);
                 var diff = cDiff(c_old, c_new);
 
-                colorToImageData(img, c, r, c_new);
+                colorToImageData(img_buf, c, r, c_new);
                 cAdd(buf_cur[c+1], diff, 7/16);
                 cAdd(buf_next[c-1], diff, 3/16);
                 cAdd(buf_next[c], diff, 5/16);
@@ -88,17 +95,18 @@ var converters = {
             var c_new = nearestPaletteColor(c_old);
             var diff = cDiff(c_old, c_new);
 
-            colorToImageData(img, c, r, c_new);
+            colorToImageData(img_buf, c, r, c_new);
             buf_cur[c] = c_new;
             cAdd(buf_cur[c+1], diff, 1);
         }
 
-        ctx.putImageData(img, 0, 0);
+        ctx.putImageData(img_buf, 0, 0);
     },
     unorderedDither: function(img, ctx)
     {
         var w = img.width;
         var h = img.height;
+        var img_buf = copyImageData(img, ctx);
         for(var row = 0; row < h; row++)
         {
             for(var col = 0; col < w; col++)
@@ -107,16 +115,17 @@ var converters = {
                 var delta = Math.random();
 
                 var c_new = paletteColorWithDelta(c_old, delta);
-                colorToImageData(img, col, row, c_new);
+                colorToImageData(img_buf, col, row, c_new);
             }
         }
-        ctx.putImageData(img, 0, 0);
+        ctx.putImageData(img_buf, 0, 0);
     },
     orderedDither: function(img, ctx)
     {
         var N = bayerMatrix.length;
         var w = img.width;
         var h = img.height;
+        var img_buf = copyImageData(img, ctx);
         for(var row = 0; row < h; row++)
         {
             for(var col = 0; col < w; col++)
@@ -125,9 +134,9 @@ var converters = {
                 var delta = bayerMatrix[row%N][col%N];
 
                 var c_new = paletteColorWithDelta(c_old, delta);
-                colorToImageData(img, col, row, c_new);
+                colorToImageData(img_buf, col, row, c_new);
             }
         }
-        ctx.putImageData(img, 0, 0);
+        ctx.putImageData(img_buf, 0, 0);
     }
 };
