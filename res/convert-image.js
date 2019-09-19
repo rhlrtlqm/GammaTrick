@@ -1,4 +1,4 @@
-function convertBitmap(name, image)
+function convertBitmap(name, image, arg)
 {
     var cvs = $('<canvas/>').appendTo('#result')[0];
     cvs.width = image.width;
@@ -6,7 +6,7 @@ function convertBitmap(name, image)
     var ctx = cvs.getContext('2d');
 
 
-    converters[name](image, ctx);
+    converters[name](image, ctx, arg);
 }
 
 function startConvert(img_blob)
@@ -22,6 +22,7 @@ function startConvert(img_blob)
 
         var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
         convertBitmap('floydSteinberg', imgData);
+        convertBitmap('floydSteinberg', imgData, true);
     };
 
     img.src = URL.createObjectURL(img_blob);

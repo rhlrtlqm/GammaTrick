@@ -46,9 +46,15 @@ bayerMatrix = (function() {
             [15/16, 7/16, 13/16, 5/16]];
 }());
 
-function quantitizeLine(img, row, matrix, dc)
+function quantitizeLine(img, row, matrix, isSerpentine)
 {
     var matMid = (matrix[0].length-1)/2;
+
+    var dc = 1;
+    if(isSerpentine === true)
+    {
+        dc = (row%2 === 0) ? +1 : -1;
+    }
 
     var w = img.width;
     var c = 0;
@@ -83,7 +89,7 @@ var floydMatrix = [[0, 0, 7/16],
 var pushNextMatrix = [[0, 0, 1]];
 
 var converters = {
-    floydSteinberg: function(img, ctx)
+    floydSteinberg: function(img, ctx, isSerpentine)
     {
         var w = img.width;
         var h = img.height;
@@ -91,10 +97,10 @@ var converters = {
 
         for(var r = 0; r < h-1; r++)
         {
-            quantitizeLine(img_buf, r, floydMatrix, 1);
+            quantitizeLine(img_buf, r, floydMatrix, isSerpentine);
         }
 
-        quantitizeLine(img_buf, r, pushNextMatrix, 1);
+        quantitizeLine(img_buf, r, pushNextMatrix, isSerpentine);
 
         ctx.putImageData(img_buf, 0, 0);
     },
