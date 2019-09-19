@@ -31,7 +31,7 @@ function fillCircularBuffer(img, row)
     return buf;
 }
 
-function paletteColorWithDelta(color, randNum)
+function paletteColorWithDelta(color, rs)
 {
     var colorNumPerChannel = Math.cbrt(gam_palette.colors.length);
     var gamma = gam_palette.gamma;
@@ -41,11 +41,11 @@ function paletteColorWithDelta(color, randNum)
         var lower = Math.floor(reverseGamma(color[i], gamma));
         var upper = lower+1;
         var dist = reverseGamma(upper, 1/gamma) - reverseGamma(lower, 1/gamma);
-        distVec.push(dist/2);
+        distVec.push((rs[i]-0.5) * (dist/2));
     }
 
 
-    var movedColor = cAdd(color, distVec, randNum-0.5);
+    var movedColor = cAdd(color, distVec, 1);
     return nearestPaletteColor(movedColor);
 }
 
@@ -112,9 +112,9 @@ var converters = {
             for(var col = 0; col < w; col++)
             {
                 var c_old = colorFromImageData(img, col, row);
-                var delta = Math.random();
+                rs = [Math.random(), Math.random(), Math.random()];
 
-                var c_new = paletteColorWithDelta(c_old, delta);
+                var c_new = paletteColorWithDelta(c_old, rs);
                 colorToImageData(img_buf, col, row, c_new);
             }
         }
@@ -131,9 +131,11 @@ var converters = {
             for(var col = 0; col < w; col++)
             {
                 var c_old = colorFromImageData(img, col, row);
-                var delta = bayerMatrix[row%N][col%N];
+                var r1 = bayerMatrix[row%N][col%N];
+                var r2 = bayerMatrix[col%N][row%N];
+                var r3 = bayerMatrix[(N-1) - row%N][col%N];
 
-                var c_new = paletteColorWithDelta(c_old, delta);
+                var c_new = paletteColorWithDelta(c_old, [r1, r2, r3]);
                 colorToImageData(img_buf, col, row, c_new);
             }
         }
