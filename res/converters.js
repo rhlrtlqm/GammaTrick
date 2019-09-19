@@ -12,14 +12,6 @@ function colorToImageData(img, x, y, c)
     img.data[idx+2] = c[2];
 }
 
-function applyLineBuffer(img, r, buf)
-{
-    for(var c = 0; c < buf.length; c++)
-    {
-        colorToImageData(img, c, r, buf[c]);
-    }
-}
-
 function copyImageData(img, ctx)
 {
     var img_buf = ctx.createImageData(img);
@@ -27,16 +19,7 @@ function copyImageData(img, ctx)
     return img_buf;
 }
 
-function fillCircularBuffer(img, row)
-{
-    var buf = [];
-    var c = 0;
-    for(; c < img.width; c++)
-    {
-        buf[c] = colorFromImageData(img, c, row);
-    }
-    return buf;
-}
+
 
 function paletteColorWithDelta(color, rs)
 {
@@ -63,11 +46,11 @@ bayerMatrix = (function() {
             [15/16, 7/16, 13/16, 5/16]];
 }());
 
-function quantitizeLine(bufs, matrix, dc)
+function quantitizeLine(img, row, matrix, dc)
 {
     var matMid = (matrix[0].length-1)/2;
 
-    var w = bufs[0].length;
+    var w = img.width;
     var c = 0;
     if(dc === -1)
     {
@@ -76,16 +59,20 @@ function quantitizeLine(bufs, matrix, dc)
 
     for(; 0 <= c && c < w; c += dc)
     {
-        var c_old = bufs[0][c];
+        var c_old = colorFromImageData(img, c, row);
         var c_new = nearestPaletteColor(c_old);
         var diff = cDiff(c_old, c_new);
 
-        bufs[0][c] = c_new;
+        colorToImageData(img, c, row, c_new);
         for(var i = 0; i < matrix.length; i++)
         {
             for(var j = 0; j < matrix[0].length; j++)
             {
-                cAdd(bufs[i][c + dc*(j-matMid)], diff, matrix[i][j]);
+                var x = c + dc*(j-matMid);
+                var y = row + i;
+                var c_toDiffuse = colorFromImageData(img, x, y);
+                var c_diffused = cAdd(c_toDiffuse, diff, matrix[i][j]);
+                colorToImageData(img, x, y, c_diffused);
             }
         }
     }
@@ -102,23 +89,12 @@ var converters = {
         var h = img.height;
         var img_buf = copyImageData(img, ctx);
 
-        var buf_cur;
-        var buf_next;
-
-        buf_next = fillCircularBuffer(img, 0);
-
         for(var r = 0; r < h-1; r++)
         {
-            buf_cur = buf_next;
-            buf_next = fillCircularBuffer(img, r+1);
-
-            quantitizeLine([buf_cur, buf_next], floydMatrix, 1);
-            applyLineBuffer(img_buf, r, buf_cur);
+            quantitizeLine(img_buf, r, floydMatrix, 1);
         }
 
-        buf_cur = buf_next;
-        quantitizeLine([buf_cur], pushNextMatrix, 1);
-        applyLineBuffer(img_buf, r, buf_cur);
+        quantitizeLine(img_buf, r, pushNextMatrix, 1);
 
         ctx.putImageData(img_buf, 0, 0);
     },
