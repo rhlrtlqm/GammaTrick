@@ -12,6 +12,14 @@ function colorToImageData(img, x, y, c)
     img.data[idx+2] = c[2];
 }
 
+function applyLineBuffer(img, r, buf)
+{
+    for(var c = 0; c < buf.length; c++)
+    {
+        colorToImageData(img, c, r, buf[c]);
+    }
+}
+
 function copyImageData(img, ctx)
 {
     var img_buf = ctx.createImageData(img);
@@ -27,7 +35,6 @@ function fillCircularBuffer(img, row)
     {
         buf[c] = colorFromImageData(img, c, row);
     }
-    buf[-1] = buf[c] = [0, 0, 0];
     return buf;
 }
 
@@ -56,6 +63,37 @@ bayerMatrix = (function() {
             [15/16, 7/16, 13/16, 5/16]];
 }());
 
+function quantitizeLine(bufs, matrix, dc)
+{
+    var matMid = (matrix[0].length-1)/2;
+
+    var w = bufs[0].length;
+    var c = 0;
+    if(dc === -1)
+    {
+        c = w-1;
+    }
+
+    for(; 0 <= c && c < w; c += dc)
+    {
+        var c_old = bufs[0][c];
+        var c_new = nearestPaletteColor(c_old);
+        var diff = cDiff(c_old, c_new);
+
+        bufs[0][c] = c_new;
+        for(var i = 0; i < matrix.length; i++)
+        {
+            for(var j = 0; j < matrix[0].length; j++)
+            {
+                cAdd(bufs[i][c + dc*(j-matMid)], diff, matrix[i][j]);
+            }
+        }
+    }
+}
+
+var floydMatrix = [[0, 0, 7/16],
+                   [3/16, 5/16, 1/16]];
+var pushNextMatrix = [[0, 0, 1]];
 
 var converters = {
     floydSteinberg: function(img, ctx)
@@ -74,31 +112,13 @@ var converters = {
             buf_cur = buf_next;
             buf_next = fillCircularBuffer(img, r+1);
 
-            for(var c = 0; c < w; c++)
-            {
-                var c_old = buf_cur[c];
-                var c_new = nearestPaletteColor(c_old);
-                var diff = cDiff(c_old, c_new);
-
-                colorToImageData(img_buf, c, r, c_new);
-                cAdd(buf_cur[c+1], diff, 7/16);
-                cAdd(buf_next[c-1], diff, 3/16);
-                cAdd(buf_next[c], diff, 5/16);
-                cAdd(buf_next[c+1], diff, 1/16);
-            }
+            quantitizeLine([buf_cur, buf_next], floydMatrix, 1);
+            applyLineBuffer(img_buf, r, buf_cur);
         }
 
         buf_cur = buf_next;
-        for(var c = 0; c < w; c++)
-        {
-            var c_old = buf_cur[c];
-            var c_new = nearestPaletteColor(c_old);
-            var diff = cDiff(c_old, c_new);
-
-            colorToImageData(img_buf, c, r, c_new);
-            buf_cur[c] = c_new;
-            cAdd(buf_cur[c+1], diff, 1);
-        }
+        quantitizeLine([buf_cur], pushNextMatrix, 1);
+        applyLineBuffer(img_buf, r, buf_cur);
 
         ctx.putImageData(img_buf, 0, 0);
     },

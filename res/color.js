@@ -36,9 +36,12 @@ var gam_palette = gamma_palette(0xfd, 0x40);
 
 function cAdd(a, b, k)
 {
-    a[0] += k*b[0],
-    a[1] += k*b[1],
-    a[2] += k*b[2]
+    if(a !== undefined)
+    {
+        a[0] += k*b[0],
+        a[1] += k*b[1],
+        a[2] += k*b[2]
+    }
 
     return a;
 }
