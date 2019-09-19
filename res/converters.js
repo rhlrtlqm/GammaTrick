@@ -84,8 +84,17 @@ function quantitizeLine(img, row, matrix, isSerpentine)
     }
 }
 
+var jjnMatrix = [[0, 0, 0, 7/48, 5/48],
+                 [3/48, 5/48, 7/48, 5/48, 3/48],
+                 [1/48, 3/48, 5/48, 3/48, 1/48]];
+
+var stuckiMatrix = [[0, 0, 0, 8/48, 4/48],
+                    [2/48, 4/48, 8/48, 4/48, 2/48],
+                    [1/48, 2/48, 4/48, 2/48, 1/48]];
+
 var floydMatrix = [[0, 0, 7/16],
                    [3/16, 5/16, 1/16]];
+
 var pushNextMatrix = [[0, 0, 1]];
 
 function errorDiffuser()
@@ -116,6 +125,8 @@ function errorDiffuser()
 
 var converters = {
     floydSteinberg: errorDiffuser(floydMatrix, pushNextMatrix),
+    jarvisJudiceNinke: errorDiffuser(jjnMatrix, floydMatrix, pushNextMatrix),
+    stucki: errorDiffuser(stuckiMatrix, floydMatrix, pushNextMatrix),
     unorderedDither: function(img, ctx)
     {
         var w = img.width;

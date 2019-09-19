@@ -21,8 +21,9 @@ function startConvert(img_blob)
         ctx.drawImage(this, 0, 0);
 
         var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-        convertBitmap('floydSteinberg', imgData);
         convertBitmap('floydSteinberg', imgData, true);
+        convertBitmap('jarvisJudiceNinke', imgData, true);
+        convertBitmap('stucki', imgData, true);
     };
 
     img.src = URL.createObjectURL(img_blob);
