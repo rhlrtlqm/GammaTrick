@@ -1,12 +1,26 @@
+function generateGammaTrickPNG(cvs, ongenerate)
+{
+    var png = cvs.toBlob(function(blob) {
+        ongenerate(blob);
+    }, 'image/png');
+}
+
 function convertBitmap(name, image, arg)
 {
-    var cvs = $('<canvas/>').appendTo('#result')[0];
+    var anchor = $('<a/>', {
+        download: name+'.png'
+    }).appendTo('#result');
+    var cvs = $('<canvas/>').appendTo(anchor)[0];
     cvs.width = image.width;
     cvs.height = image.height;
     var ctx = cvs.getContext('2d');
 
 
     converters[name](image, ctx, arg);
+    generateGammaTrickPNG(cvs, function(blob) {
+        var url = URL.createObjectURL(blob);
+        anchor.attr('href', url);
+    });
 }
 
 function startConvert(img_blob)
@@ -22,8 +36,6 @@ function startConvert(img_blob)
 
         var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
         convertBitmap('floydSteinberg', imgData, true);
-        convertBitmap('jarvisJudiceNinke', imgData, true);
-        convertBitmap('stucki', imgData, true);
     };
 
     img.src = URL.createObjectURL(img_blob);
