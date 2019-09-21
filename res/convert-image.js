@@ -37,7 +37,7 @@ function generateGammaChunk(gamma)
     storeToByteArray(chunk, c_gamma, 2, true);
 
     var c_crc = crc32(chunk, 4, 8);
-    storeToByteArray(chunk, c_crc, 3, false);
+    storeToByteArray(chunk, c_crc, 3, true);
 
     return chunk;
 }
