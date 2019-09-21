@@ -1,7 +1,69 @@
-function generateGammaTrickPNG(cvs, ongenerate)
+function applyGammaToImageData(imgData, gamma)
 {
+    var arr = imgData.data;
+
+    for(var i = 0; i < arr.length; i++)
+    {
+        if(i%4 == 3)
+        {
+            continue;
+        }
+
+        arr[i] = reverseGamma(arr[i], gamma);
+    }
+
+    return imgData;
+}
+
+ 
+function storeToByteArray(arr, word, off, isBigEndian)
+{
+    for(var i = 0; i < 4; i++)
+    {
+        var idx = isBigEndian ? 4*off+3 - i : off+i;
+        arr[idx] = word & 0xff;
+        word >>= 8;
+    }
+}
+
+function generateGammaChunk(gamma)
+{
+    var c_length = 4;
+    var c_name = 0x67414d41; //gAMA in ASCII
+    var c_gamma = Math.round(100000*gamma/2.2);
+    var chunk = new Uint8Array(4*4);
+    storeToByteArray(chunk, c_length, 0, true);
+    storeToByteArray(chunk, c_name, 1, true);
+    storeToByteArray(chunk, c_gamma, 2, true);
+
+    var c_crc = crc32(chunk, 4, 8);
+    storeToByteArray(chunk, c_crc, 3, false);
+
+    return chunk;
+}
+
+function insertGammaChunk(blob, gAMA)
+{
+    return blob;
+}
+
+function generateGammaTrickPNG(cvs_ref, ongenerate)
+{
+    var cvs = $('<canvas/>')[0];
+    cvs.width = cvs_ref.width;
+    cvs.height = cvs_ref.height;
+    var ctx = cvs.getContext('2d');
+    ctx.drawImage(cvs_ref, 0, 0);
+
+    var gamma = gam_palette.gamma;
+    var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+    ctx.putImageData(applyGammaToImageData(imgData, gamma), 0, 0);
+
+    gAMA = generateGammaChunk(gamma);
+
     var png = cvs.toBlob(function(blob) {
-        ongenerate(blob);
+        gAMA_inserted = insertGammaChunk(blob, gAMA);
+        ongenerate(gAMA_inserted);
     }, 'image/png');
 }
 
