@@ -20,7 +20,7 @@ function storeToByteArray(arr, word, off, isBigEndian)
 {
     for(var i = 0; i < 4; i++)
     {
-        var idx = isBigEndian ? 4*off+3 - i : off+i;
+        var idx = isBigEndian ? 4*off+3 - i : 4*off+i;
         arr[idx] = word & 0xff;
         word >>= 8;
     }
