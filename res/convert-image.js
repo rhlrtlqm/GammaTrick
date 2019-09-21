@@ -16,12 +16,11 @@ function applyGammaToImageData(imgData, gamma)
 }
 
  
-function storeToByteArray(arr, word, off, isBigEndian)
+function storeAsBigEndian(arr, word, off)
 {
     for(var i = 0; i < 4; i++)
     {
-        var idx = isBigEndian ? 4*off+3 - i : 4*off+i;
-        arr[idx] = word & 0xff;
+        arr[4*off+3 - i] = word & 0xff;
         word >>= 8;
     }
 }
@@ -32,19 +31,27 @@ function generateGammaChunk(gamma)
     var c_name = 0x67414d41; //gAMA in ASCII
     var c_gamma = Math.round(100000*gamma/2.2);
     var chunk = new Uint8Array(4*4);
-    storeToByteArray(chunk, c_length, 0, true);
-    storeToByteArray(chunk, c_name, 1, true);
-    storeToByteArray(chunk, c_gamma, 2, true);
+    storeAsBigEndian(chunk, c_length, 0);
+    storeAsBigEndian(chunk, c_name, 1);
+    storeAsBigEndian(chunk, c_gamma, 2);
 
     var c_crc = crc32(chunk, 4, 8);
-    storeToByteArray(chunk, c_crc, 3, true);
+    storeAsBigEndian(chunk, c_crc, 3);
 
     return chunk;
 }
 
 function insertGammaChunk(blob, gAMA)
 {
-    return blob;
+    var magic_len = 8;
+    var IHDR_len = 4+4+13+4;
+    var before_pos = magic_len+IHDR_len;
+
+    var before = blob.slice(0, before_pos);
+    var after = blob.slice(before_pos);
+    var inserted = new Blob([before, gAMA, after], {type: 'image/png'});
+
+    return inserted;
 }
 
 function generateGammaTrickPNG(cvs_ref, ongenerate)
