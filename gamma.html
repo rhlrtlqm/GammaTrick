@@ -19,11 +19,20 @@
             <h1>
                 여기에 변환할 파일을 드래그&드롭
             </h1>
-            <div id="previewarea">
-                변환할 이미지<br>
-                <img id="preview" alt="이미지 불러오는 중...">
-                </img>
-            </div>
+            <form id="paletteform">
+                <h2>팔레트</h2>
+                클릭하지 않았을 때 보일 색들<br>
+                종류가 많을수록 화질 저하가 줄어들지만<br>
+                너무 많으면 클릭하지 않았을 때도 이미지가 보임
+                <br><br>
+                <canvas id="palettepreview" width="200" height="100">
+                </canvas><br>
+                위 이미지에서 색 변화가 보이면 색 종류를 줄일 것<br>
+                색 종류:
+                <input type="number" id="numinput"
+                    min="1" max="256" value="6">³ =
+                <span id="numresult"></span>
+            </form>
             <div id="result">
             </div>
         </div>

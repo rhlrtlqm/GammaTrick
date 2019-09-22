@@ -27,11 +27,18 @@ function gamma_palette(original_darkest, converted_darkest)
 
     return {
         gamma: 1/invGamma,
-        colors: colors
+        colors: colors,
+        colorsPerChannel: 0xff-original_darkest+1
     };
 }
 
-var gam_palette = gamma_palette(0xfd, 0x40);
+var gam_palette;
+
+function updateGammaPalette(colorsPerChannel)
+{
+    gam_palette = gamma_palette(0xff-colorsPerChannel+1, 0x40);
+}
+
 
 
 function cAdd(a, b, k)
