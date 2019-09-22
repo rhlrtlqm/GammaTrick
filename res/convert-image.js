@@ -79,6 +79,7 @@ function convertBitmap(name, image, arg)
     var anchor = $('<a/>', {
         download: name+'.png'
     }).appendTo('#result');
+    $('<br>').appendTo('#result');
     var cvs = $('<canvas/>').appendTo(anchor)[0];
     cvs.width = image.width;
     cvs.height = image.height;
@@ -94,6 +95,8 @@ function convertBitmap(name, image, arg)
 
 function startConvert(img_blob)
 {
+    $('#result').empty();
+
     var cvs = $('<canvas/>')[0];
     var ctx = cvs.getContext('2d');
     var img = new Image();

@@ -1,13 +1,4 @@
-function updateImgBlob(blob)
-{
-    img_blob = blob;
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        //$('#preview').attr('src', reader.result);
-    }
-    reader.readAsDataURL(img_blob);
-}
+var img_blob = undefined;
 
 function toHTMLRGB(color)
 {
@@ -45,9 +36,6 @@ function updatePalette()
 
 
 $(function() {
-    updateImgBlob(img_blob);
-    //startConvert(img_blob);
-
     updatePalette();
     $('#fileform')[0].reset()
 });
@@ -61,15 +49,22 @@ window.addEventListener('drop', function (e) {
     e.preventDefault();
     e.stopPropagation();
 
-    makeResultFile(e.dataTransfer.files);
+    startConvert(img_blob = e.dataTransfer.files[0]);
 }, false);
 
 $(function(){
     $('#fileinput').on('change', function(e) {
-        updateImgBlob(this.files[0]);
+        startConvert(img_blob = this.files[0]);
     });
 
     $('#numinput').on('change', function(e) {
         updatePalette();
+    });
+
+    $('#paletteform').on('submit', function(e) {
+        if(img_blob)
+        {
+            startConvert(img_blob);
+        }
     });
 });
