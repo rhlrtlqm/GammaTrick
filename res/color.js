@@ -1,6 +1,6 @@
 function reverseGamma(color, invGamma)
 {
-    return Math.round(255*Math.pow(color/255, invGamma));
+    return 255*Math.pow(color/255, invGamma);
 }
 
 
@@ -10,25 +10,10 @@ function gamma_palette(original_darkest, converted_darkest)
     var cd = converted_darkest/255;
     var invGamma = Math.log(cd)/Math.log(od);
 
-    var colors = [];
-    for(var r = original_darkest; r <= 0xff; r++)
-    {
-        for(var g = original_darkest; g <= 0xff; g++)
-        {
-            for(var b = original_darkest; b <= 0xff; b++)
-            {
-                var color = [r, g, b].map(function(c) {
-                    return reverseGamma(c, invGamma);
-                });
-                colors.push(color);
-            }
-        }
-    }
-
     return {
         gamma: 1/invGamma,
-        colors: colors,
-        colorsPerChannel: 0xff-original_darkest+1
+        colorsPerChannel: 0xff-original_darkest+1,
+        darkest_chan: converted_darkest
     };
 }
 
@@ -43,14 +28,26 @@ function updateGammaPalette(colorsPerChannel)
 
 function cAdd(a, b, k)
 {
-    if(a !== undefined)
+    if(a === undefined)
     {
-        a[0] += k*b[0],
-        a[1] += k*b[1],
-        a[2] += k*b[2]
+        return a;
     }
 
-    return a;
+    var c = 0;
+    for(var i = 0; i < 3; i++)
+    {
+        var cc = Math.floor((a&0xff) + k*(b&0xff));
+        if(cc > 0xff)
+        {
+            cc = 0xff;
+        }
+        c |= cc<<(i<<3);
+
+        a >>= 8;
+        b >>= 8;
+    }
+
+    return c;
 }
 
 function cDiff(a, b)
@@ -60,27 +57,56 @@ function cDiff(a, b)
 
 function colorError(a, b)
 {
-    d = cDiff(a.slice(), b);
+    var d = cDiff(a, b);
+    var error = 0;
 
-    return d[0]*d[0] + 
-        d[1]*d[1] + 
-        d[2]*d[2];
+    for(var i = 0; i < 3; i++)
+    {
+        var dd = d&0xff;
+        error += dd*dd;
+        d >>= 8;
+    }
+
+    return error;
 }
 
 function nearestPaletteColor(c)
 {
-    var bestError = Infinity;
-    var cs = gam_palette.colors;
-    var bestColor = cs[0];
+    var gamma = gam_palette.gamma;
+    var ch_min = gam_palette.darkest_chan;
+    var bestColor = 0;
 
-    for(var i in cs)
+    for(var i = 0; i < 3; i++)
     {
-        var error = colorError(cs[i], c);
-        if(error < bestError)
+        var ch = c & 0xff;
+        var ub, lb;
+        if(ch <= ch_min)
         {
-            bestError = error;
-            bestColor = cs[i];
+            ub = lb = ch_min;
         }
+        else
+        {
+            var lb_gam = Math.floor(reverseGamma(ch, gamma));
+            lb = Math.round(reverseGamma(lb_gam, 1/gamma));
+            ub = Math.round(reverseGamma(lb_gam+1, 1/gamma));
+            if(ub > 0xff)
+            {
+                ub = 0xff;
+            }
+        }
+
+        var ccc;
+        if(ub - ch < ch - lb)
+        {
+            ccc = ub;
+        }
+        else
+        {
+            ccc = lb;
+        }
+        bestColor |= ccc<<(i<<3);
+
+        c >>= 8;
     }
 
     return bestColor;

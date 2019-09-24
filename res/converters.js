@@ -1,15 +1,25 @@
 function colorFromImageData(img, x, y)
 {
-    var pixelIndex = img.width*y + x;
-    return img.data.slice(4*pixelIndex, 4*pixelIndex+3);
+    var color = 0;
+    var idx = 4*(img.width*y + x);
+    for(var i = idx; i < idx+3; i++)
+    {
+        color <<= 8;
+        color |= img.data[i];
+    }
+
+    return color;
 }
 
 function colorToImageData(img, x, y, c)
 {
     var idx = 4*(img.width*y + x);
-    img.data[idx] = c[0];
-    img.data[idx+1] = c[1];
-    img.data[idx+2] = c[2];
+
+    for(var i = idx+2; idx <= i; i--)
+    {
+        img.data[i] = c&0xff;
+        c >>= 8;
+    }
 }
 
 function copyImageData(img, ctx)
@@ -46,6 +56,24 @@ bayerMatrix = (function() {
             [15/16, 7/16, 13/16, 5/16]];
 }());
 
+function fitByte(c)
+{
+    if(c >= 0xff)
+    {
+        c = 0xff;
+    }
+    else if(c < 0)
+    {
+        c = 0;
+    }
+    else
+    {
+        c = Math.round(c);
+    }
+
+    return c;
+}
+
 function quantitizeLine(img, row, matrix, isSerpentine)
 {
     var matMid = (matrix[0].length-1)/2;
@@ -67,7 +95,9 @@ function quantitizeLine(img, row, matrix, isSerpentine)
     {
         var c_old = colorFromImageData(img, c, row);
         var c_new = nearestPaletteColor(c_old);
-        var diff = cDiff(c_old, c_new);
+        var d1 = (c_old>>16) - (c_new>>16);
+        var d2 = (0xff&(c_old>>8)) - (0xff&(c_new>>8));
+        var d3 = (0xff&c_old) - (0xff&c_new);
 
         colorToImageData(img, c, row, c_new);
         for(var i = 0; i < matrix.length; i++)
@@ -77,7 +107,12 @@ function quantitizeLine(img, row, matrix, isSerpentine)
                 var x = c + dc*(j-matMid);
                 var y = row + i;
                 var c_toDiffuse = colorFromImageData(img, x, y);
-                var c_diffused = cAdd(c_toDiffuse, diff, matrix[i][j]);
+                var k = matrix[i][j];
+
+                var c1 = fitByte((c_toDiffuse>>16) + k*d1);
+                var c2 = fitByte((0xff&(c_toDiffuse>>8)) + k*d2);
+                var c3 = fitByte((0xff&c_toDiffuse) + k*d3);
+                var c_diffused = (c1<<16) | (c2<<8) | c3
                 colorToImageData(img, x, y, c_diffused);
             }
         }

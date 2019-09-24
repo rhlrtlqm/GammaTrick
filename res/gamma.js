@@ -19,7 +19,7 @@ function updatePalette()
 {
     var input = parseInt($('#numinput').val(), 10);
     updateGammaPalette(input);
-    $('#numresult').text(gam_palette.colors.length.toString());
+    $('#numresult').text(input*input*input);
 
     var cvs = $('#palettepreview')[0];
     var ctx = cvs.getContext('2d');
