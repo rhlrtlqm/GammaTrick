@@ -70,12 +70,14 @@ function colorError(a, b)
     return error;
 }
 
-function nearestPaletteColor(c)
+function nearestPaletteColor(color)
 {
     var gamma = gam_palette.gamma;
     var ch_min = gam_palette.darkest_chan;
     var bestColor = 0;
 
+    var uc = 0, lc = 0;
+    var c = color;
     for(var i = 0; i < 3; i++)
     {
         var ch = c & 0xff;
@@ -95,18 +97,29 @@ function nearestPaletteColor(c)
             }
         }
 
-        var ccc;
-        if(ub - ch < ch - lb)
-        {
-            ccc = ub;
-        }
-        else
-        {
-            ccc = lb;
-        }
-        bestColor |= ccc<<(i<<3);
+        uc |= ub<<(i<<3);
+        lc |= lb<<(i<<3);
 
         c >>= 8;
+    }
+
+    var bestError = Infinity;
+    for(var r = 0; r <= 1; r++)
+    {
+        for(var g = 0; g <= 1; g++)
+        {
+            for(var b = 0; b <= 1; b++)
+            {
+                var m = (r*0xff0000) | (g*0x00ff00) | (b*0x0000ff);
+                var cc = (uc&m) | (lc&(0xffffff^m));
+                var error = colorError(color, cc);
+                if(error < bestError)
+                {
+                    bestError = error;
+                    bestColor = cc;
+                }
+            }
+        }
     }
 
     return bestColor;
