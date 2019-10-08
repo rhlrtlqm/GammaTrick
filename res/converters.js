@@ -30,23 +30,46 @@ function copyImageData(img, ctx)
 }
 
 
-
-function paletteColorWithDelta(color, rs)
+function paletteChannelWithDelta(ch, r)
 {
-    var colorNumPerChannel = Math.cbrt(gam_palette.colors.length);
+    var colorNumPerChannel = gam_palette.colorsPerChannel;
+    var ch_min = gam_palette.darkest_chan;
     var gamma = gam_palette.gamma;
-    var distVec = [];
-    for(var i = 0; i < 3; i++)
+
+    if(ch <= ch_min)
     {
-        var lower = Math.floor(reverseGamma(color[i], gamma));
-        var upper = lower+1;
-        var dist = reverseGamma(upper, 1/gamma) - reverseGamma(lower, 1/gamma);
-        distVec.push((rs[i]-0.5) * (dist/2));
+        return ch_min;
     }
+    else
+    {
+        var lb_gam = Math.floor(reverseGamma(ch, gamma));
+        var lb = Math.round(reverseGamma(lb_gam, 1/gamma));
+        var ub = Math.round(reverseGamma(lb_gam+1, 1/gamma));
+        if(ub > 0xff)
+        {
+            ub = 0xff;
+        }
+
+        if((ch-lb)/(ub-lb) < r)
+        {
+            return lb;
+        }
+        else
+        {
+            return ub;
+        }
+    }
+}
 
 
-    var movedColor = cAdd(color, distVec, 1);
-    return nearestPaletteColor(movedColor);
+function paletteColorWithDelta(color, r1, r2, r3)
+{
+    var r = paletteChannelWithDelta(color>>>16, r1);
+    var g = paletteChannelWithDelta((color>>>8)&0xff, r2);
+    var b = paletteChannelWithDelta(color&0xff, r3);
+
+
+    return (r<<16) | (g<<8) | b;
 }
 
 bayerMatrix = (function() {
@@ -195,7 +218,7 @@ var converters = {
                 var r2 = bayerMatrix[col%N][row%N];
                 var r3 = bayerMatrix[(N-1) - row%N][col%N];
 
-                var c_new = paletteColorWithDelta(c_old, [r1, r2, r3]);
+                var c_new = paletteColorWithDelta(c_old, r1, r2, r3);
                 colorToImageData(img_buf, col, row, c_new);
             }
         }

@@ -108,7 +108,7 @@ function startConvert(img_blob)
 
         var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
         convertBitmap('jarvisJudiceNinke', imgData, true);
-        //convertBitmap('orderedDither', imgData, true);
+        convertBitmap('orderedDither', imgData, true);
     };
 
     img.src = URL.createObjectURL(img_blob);
