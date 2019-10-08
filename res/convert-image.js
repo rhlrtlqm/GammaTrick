@@ -9,7 +9,7 @@ function applyGammaToImageData(imgData, gamma)
             continue;
         }
 
-        arr[i] = inverseChan(arr[i]);
+        arr[i] = Math.round(reverseGamma(arr[i], gamma));
     }
 
     return imgData;
