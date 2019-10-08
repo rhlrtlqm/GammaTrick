@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>민트</title>
+    <title>감마위장</title>
 
     <link rel="stylesheet" type="text/css" href="res/gamma.css">
     <script src = "res/jquery-3.4.1.min.js"></script>
@@ -17,23 +17,24 @@
     <div id="filearea">
         <div id="dropzone">
             <h1>
-                여기에 변환할 파일을 드래그&드롭
+                클릭했을 때만 보이는 이미지 생성기
             </h1>
-            <form id="paletteform">
-                <h2>팔레트</h2>
-                클릭하지 않았을 때 보일 색들<br>
-                종류가 많을수록 화질 저하가 줄어들지만<br>
-                너무 많으면 클릭하지 않았을 때도 이미지가 보임
-                <br><br>
-                <canvas id="palettepreview" width="200" height="100">
-                </canvas><br>
-                위 이미지에서 색 변화가 보이면 색 종류를 줄일 것<br>
-                색 종류:
-                <input type="number" id="numinput"
-                    min="1" max="256" value="4">³ =
-                    <span id="numresult"></span><br>
-                <input type="submit" value="팔레트 업데이트">
-            </form>
+            <h4>
+                <span class="warning">
+                    ※결과 이미지를 다른이름으로 저장 X<br>
+                </span>
+                (링크를 다른이름으로 저장 or
+                이미지를 그냥 클릭하여 저장)<br>
+                <span class="warning">
+                    ※환경에 따라 안될수도 있어서,
+                    안보인다고 야짤 달리면 차단당할 수도 있음
+                </span>
+                <br>
+                ※구버전 공앱에선 원본이 이상하게 보일 수 있음
+            </h4>
+            <h3>
+                여기에 숨길 이미지를 드래그&드롭
+            </h3>
             <div id="result">
             </div>
         </div>
@@ -41,4 +42,15 @@
             혹은 탐색기에서 찾기: <input type="file" id="fileinput">
         </form>
     </div>
+    <br>
+    <form id="paletteform">
+        <canvas id="palettepreview" width="200" height="100">
+        </canvas><br>
+        위 이미지의 양쪽 흰색이 달라보이면 색 종류를 줄일 것<br>
+        색 종류:
+        <input type="number" id="numinput"
+            min="1" max="256" value="4">³ =
+            <span id="numresult"></span><br>
+        <input type="submit" value="팔레트 업데이트">
+    </form>
 </body>
