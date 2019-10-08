@@ -67,12 +67,50 @@ function paletteColorWithDelta(color, r1, r2, r3)
     return (r<<16) | (g<<8) | b;
 }
 
-bayerMatrix = (function() {
-    return [[0, 8/16, 2/16, 10/16],
-            [12/16, 4/16, 14/16, 6/16],
-            [3/16, 11/16, 1/16, 9/16],
-            [15/16, 7/16, 13/16, 5/16]];
-}());
+function createBayerMatrix(n)
+{
+    var m = new Array(n);
+    for(var i = 0; i < n; i++)
+    {
+        m[i] = new Array(n);
+    }
+
+    var stride = n/2;
+    m[0][0] = 0;
+
+    for(var ni = 2; ni <= n; ni *= 2)
+    {
+        var stride = n/ni;
+
+        for(var i = 0; i < ni; i+=2)
+        {
+            for(var j = 0; j < ni; j+=2)
+            {
+                var x = stride*j;
+                var y = stride*i;
+                
+                var e = 4*m[y][x];
+                m[y][x] = e;
+                m[y][x+stride] = e+2;
+                m[y+stride][x] = e+3;
+                m[y+stride][x+stride] = e+1;
+            }
+        }
+    }
+
+    var coef = 1/(n*n);
+    for(var i = 0; i < n; i++)
+    {
+        for(var j = 0; j < n; j++)
+        {
+            m[i][j] *= coef;
+        }
+    }
+    return m;
+}
+
+
+bayerMatrix = createBayerMatrix(4);
 
 function fitByte(c)
 {
