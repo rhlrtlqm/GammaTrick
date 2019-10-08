@@ -42,13 +42,8 @@ function paletteChannelWithDelta(ch, r)
     }
     else
     {
-        var lb_gam = Math.floor(reverseGamma(ch, gamma));
-        var lb = Math.round(reverseGamma(lb_gam, 1/gamma));
-        var ub = Math.round(reverseGamma(lb_gam+1, 1/gamma));
-        if(ub > 0xff)
-        {
-            ub = 0xff;
-        }
+        var lb = precedingChan(ch);
+        var ub = succeedingChan(ch);
 
         if((ch-lb)/(ub-lb) < r)
         {

@@ -9,7 +9,7 @@ function applyGammaToImageData(imgData, gamma)
             continue;
         }
 
-        arr[i] = reverseGamma(arr[i], gamma);
+        arr[i] = inverseChan(arr[i]);
     }
 
     return imgData;
@@ -54,17 +54,24 @@ function insertGammaChunk(blob, gAMA)
     return inserted;
 }
 
+var border_width = 15;
 function generateGammaTrickPNG(cvs_ref, ongenerate)
 {
+
     var cvs = $('<canvas/>')[0];
-    cvs.width = cvs_ref.width;
-    cvs.height = cvs_ref.height;
+    cvs.width = cvs_ref.width + 2*border_width;
+    cvs.height = cvs_ref.height + 2*border_width;
     var ctx = cvs.getContext('2d');
-    ctx.drawImage(cvs_ref, 0, 0);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    ctx.drawImage(cvs_ref, border_width, border_width);
 
     var gamma = gam_palette.gamma;
-    var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-    ctx.putImageData(applyGammaToImageData(imgData, gamma), 0, 0);
+    var imgData = ctx.getImageData(border_width, border_width,
+        cvs.width-2*border_width, cvs.height-2*border_width);
+    ctx.putImageData(applyGammaToImageData(imgData, gamma),
+        border_width, border_width);
 
     gAMA = generateGammaChunk(gamma);
 
@@ -107,8 +114,7 @@ function startConvert(img_blob)
         ctx.drawImage(this, 0, 0);
 
         var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-        convertBitmap('jarvisJudiceNinke', imgData, true);
-        convertBitmap('orderedDither', imgData, true);
+        convertBitmap('orderedDither', imgData);
     };
 
     img.src = URL.createObjectURL(img_blob);

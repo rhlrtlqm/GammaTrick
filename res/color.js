@@ -6,13 +6,22 @@ function reverseGamma(color, invGamma)
 
 function gamma_palette(original_darkest, converted_darkest)
 {
+    var chans = [];
+
     var od = original_darkest/255;
     var cd = converted_darkest/255;
     var invGamma = Math.log(cd)/Math.log(od);
 
+    for(var ch = original_darkest; ch <= 0xff; ch++)
+    {
+        chans.push(reverseGamma(ch, invGamma));
+    }
+
+
     return {
         gamma: 1/invGamma,
-        colorsPerChannel: 0xff-original_darkest+1,
+        chans: chans,
+        colorsPerChannel: chans.length,
         darkest_chan: converted_darkest
     };
 }
@@ -70,10 +79,52 @@ function colorError(a, b)
     return error;
 }
 
+function precedingChan(ch)
+{
+    var chans = gam_palette.chans;
+    for(var i = chans.length-1; 0 <= i; i--)
+    {
+        if(chans[i] <= ch)
+        {
+            return chans[i];
+        }
+    }
+
+    return chans[0];
+}
+
+function succeedingChan(ch)
+{
+    var chans = gam_palette.chans;
+    for(var i = 0; i < chans.length; i++)
+    {
+        if(chans[i] > ch)
+        {
+            return chans[i];
+        }
+    }
+
+    return chans[chans.length-1];
+}
+
+function inverseChan(ch)
+{
+    var chans = gam_palette.chans;
+    var i = chans.length-1;
+    while(0 < i && chans[i] > ch)
+    {
+        i--;
+    }
+
+    return (0xff-chans.length+1) + i;
+}
+
+ 
+
+
+        
 function nearestPaletteColor(color)
 {
-    var gamma = gam_palette.gamma;
-    var ch_min = gam_palette.darkest_chan;
     var bestColor = 0;
 
     var uc = 0, lc = 0;
@@ -81,21 +132,9 @@ function nearestPaletteColor(color)
     for(var i = 0; i < 3; i++)
     {
         var ch = c & 0xff;
-        var ub, lb;
-        if(ch <= ch_min)
-        {
-            ub = lb = ch_min;
-        }
-        else
-        {
-            var lb_gam = Math.floor(reverseGamma(ch, gamma));
-            lb = Math.round(reverseGamma(lb_gam, 1/gamma));
-            ub = Math.round(reverseGamma(lb_gam+1, 1/gamma));
-            if(ub > 0xff)
-            {
-                ub = 0xff;
-            }
-        }
+
+        var lb = precedingChan(ch);
+        var ub = succeedingChan(ch);
 
         uc |= ub<<(i<<3);
         lc |= lb<<(i<<3);
