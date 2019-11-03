@@ -62,6 +62,7 @@ $(function(){
     });
 
     $('#paletteform').on('submit', function(e) {
+        e.preventDefault();
         if(img_blob)
         {
             startConvert(img_blob);
